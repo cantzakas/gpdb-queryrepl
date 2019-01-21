@@ -4,7 +4,11 @@
 ### Export source Database DDL
 Backup all schemas and tables from the source database, including the global Greenplum Database system objects and query statistics, as shown below:
 
+<<<<<<< HEAD
 <script src="https://gist.github.com/cantzakas/bbdd6d30cec88bdcbf00850fc1a3a7a0.js?file=gpbackup--metadata-only--with-stats.sh"></script>
+=======
+<script src='https://gist.github.com/cantzakas/bbdd6d30cec88bdcbf00850fc1a3a7a0.js'></script>
+>>>>>>> 75f3a0f3f770ada6a4d18d2e5ce93adf8c691899
 
 Metadata files are created on the Greenplum Database master host in the `$MASTER_DATA_DIRECTORY/backups/YYYYMMDD/YYYYMMDDhhmmss/` directory. 
 
