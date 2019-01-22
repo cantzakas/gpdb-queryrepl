@@ -24,11 +24,27 @@ tar -cvzf $MASTER_DATA_DIRECTORY/backups/YYYYMMDD/YYYYMMDDhhmmss/gpbackup_YYYYMM
 	$MASTER_DATA_DIRECTORY/backups/YYYYMMDD/YYYYMMDDhhmmss/gpbackup_YYYYMMDDhhmmss_*.*
 ```
 
+**Note:** the `gpbackup` and `gprestore` utilities are available for Greenplum Database clusters v. 4
+
 ### Update logging level in source database system
 
 For the Query Replay & Replicate utility to operate properly, it needs to process at the targer database the same queries that are executed in the source, so the full query statement needs to be captured into the log files. This requires the `log_min_messages` parameter be set to '__warning__' and the `log_statement` parameter be set to '__all__'.
 
-Fist, connect into the source database and check the active values set for the `log_min_messages` and `log_statement` parameters in the cluster. i.e. you can use the `psql` utility as shown below:
+Use the `gpconfig` utility to check the active values set for the `log_min_messages` and `log_statement` parameters in the cluster. i.e.
+
+```sh
+#!/bin/bash
+
+gpconfig -c log_min_messages -v warning
+```
+
+```sh
+#!/bin/bash
+
+gpconfig -c log_statement -v all
+```
+
+Alternatively, you can also use the `psql` utility to connect to the database cluster and check the active values, using the `SHOW name` command, i.e.
 
 ```sql
 $ psql -d template1
@@ -83,8 +99,6 @@ EOF
 
 chmod +x /tmp/gpdb-logs-compress.sh
 ```
-
-crontab -u gpadmin crontab_gpadmin_saveYYYYMMDD
 
 ### Schedule log files compression
 The `cron` daemon can be used to run tasks in the background at specific times; there are a couple of ways we can update `cron` and schedule the execution of `gpdb-logs-compress.sh` utility which was defined in the previous step:
