@@ -104,9 +104,13 @@ The `cron` daemon can be used to run tasks in the background at specific times; 
   ```sh
   # Update YYYYMMDD parameter value, and export existing crontab tasks
   crontab -l > crontab_YYYYMMDD
+  
+  # Append new task into list of existing
   tee -a crontab_YYYYMMDD <<- EOF
   0 9 * * * /tmp/gpdb-logs-compress.sh >/dev/null 2>&1
   EOF
+  
+  # Update cron with updated task list
   crontab crontab_YYYYMMDD
   ```
 
