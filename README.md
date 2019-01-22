@@ -248,7 +248,7 @@ ReplayRunExplain=True
 ReplayNumThreads = 10
 ```
 
-Make sure you check all parameter values defined in the configuration before running the utility.
+Make sure you check all parameter values defined in the configuration file and update accordingly, before running the utility.
 
 ### Run the utility
 
