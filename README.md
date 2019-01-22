@@ -58,7 +58,10 @@ $ gpstop -u
 Updating logging levels to '__all__' has the side-effect that database log file grows very large. This can be difficult to manage in clusters where there are limited disk resources or large/many transactions on the database (or both). In such clusters, it is highly recommended that database log files gets compressed, preferably on a daily basis. i.e.
 
 ```sh
-$ YYYY=`date --date="yesterday" '+%Y'`; MM=`date --date="today" '+%m'`; DD=`date --date="today" '+%d'`; tar -cvjf /tmp/gpdb-logs-${YYYY}${MM}${DD}.tbz2 $MASTER_DATA_DIRECTORY/pg_log/gpdb-${YYYY}-${MM}-${DD}*.csv &> /dev/null
+$ YYYY=`date --date="yesterday" '+%Y'`; \
+MM=`date --date="today" '+%m'`; \
+DD=`date --date="today" '+%d'`; \
+tar -cvjf /tmp/gpdb-logs-${YYYY}${MM}${DD}.tbz2 $MASTER_DATA_DIRECTORY/pg_log/gpdb-${YYYY}-${MM}-${DD}*.csv &> /dev/null
 ```
 
 This script
