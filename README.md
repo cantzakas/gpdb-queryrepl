@@ -46,15 +46,25 @@ $ psql -d template1 -c "SHOW log_statement;"
 
 ```
 
-If the parameter values don't match the expected values, update them properly and reload these new configuration settings to the database: 
+If the parameter values don't match the expected values, update them and then reload the new configuration settings to the database, as shown below: 
 
 ```sql
 $ gpconfig -c log_min_messages -v warning
-$ gpconfig -c log_statement -v log
+$ gpconfig -c log_statement -v all
 $ gpstop -u
 ```
 
 ### Compress source database daily log files
+Updating logging levels to '__all__' has the side-effect that database log file grows very large. This can be difficult to manage in clusters where there are limited disk resources or large/many transactions on the database (or both). In such clusters, it is highly recommended that database log files gets compressed, preferably on a daily basis. i.e.
+
+```sh
+$ YYYY=`date --date="yesterday" '+%Y'` 
+$ MM=`date --date="today" '+%m'` 
+$ DD=`date --date="today" '+%d'` 
+$ tar -cvjf /tmp/gpdb-logs-${YYYY}${MM}${DD}.tbz2 $MASTER_DATA_DIRECTORY/pg_log/gpdb-${YYYY}-${MM}-${DD}*.csv &> /dev/null
+```
+
+This script
 
 ## 2 - Prepare target database system
 
