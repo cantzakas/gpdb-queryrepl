@@ -70,17 +70,45 @@ gpstop -u
 Updating logging levels to '__all__' has the side-effect that database log file grows very large. This can be difficult to manage in clusters where there are limited disk resources or large/many transactions on the database (or both). In such clusters, it is highly recommended that database log files gets compressed, preferably on a daily basis. i.e.
 
 ```sh
+tee -a /tmp/gpdb-logs-compress.sh <<- EOF
+
 #!/bin/bash
 
 YYYY=`date --date="yesterday" '+%Y'`; \
-MM=`date --date="today" '+%m'`; \
-DD=`date --date="today" '+%d'`; \
+MM=`date --date="yesteday" '+%m'`; \
+DD=`date --date="yesterday" '+%d'`; \
 tar -cvjf /tmp/gpdb-logs-${YYYY}${MM}${DD}.tbz2 \
   $MASTER_DATA_DIRECTORY/pg_log/gpdb-${YYYY}-${MM}-${DD}*.csv &> /dev/null
+EOF
+
+chmod +x /tmp/gpdb-logs-compress.sh
 ```
 
+crontab -u gpadmin crontab_gpadmin_saveYYYYMMDD
+
 ### Schedule log files compression
-TBD
+The `cron` daemon can be used to run tasks in the background at specific times; there are a couple of ways we can update `cron` and schedule the execution of `gpdb-logs-compress.sh` utility which was defined in the previous step:
+
+- Use the `crontab -e` command  to open your user account’s crontab file. Commands in this file run with your user account’s permissions. If you want a command to run with system permissions, use the `sudo crontab -e` command to open the root account’s crontab file or the `su -c “crontab -e”` command if user account is not in the `sudoers` group. At this point, you may be asked to select an editor; select any of the available by typing its number and press Enter. Add the following line into the editor and save:
+
+  ```sh
+  # Run gpdb-logs-compress.sh script at 09:00AM, every day 
+  # and also disable email output.
+  0 9 * * * /tmp/gpdb-logs-compress.sh >/dev/null 2>&1
+  ```
+  
+  *The `cron` utility syntax can be tricky - check online, there are some pretty cool Cron Expression Generators online you can use to update the frequency and time when you want to setup your script execution.*
+  
+- Alternatively, "export" your existing `crontab` tasks into a file, append the new task at the end of the file and finally, push it back:
+
+  ```sh
+  # Update YYYYMMDD parameter value, and export existing crontab tasks
+  crontab -l > crontab_YYYYMMDD
+  tee -a crontab_YYYYMMDD <<- EOF
+  0 9 * * * /tmp/gpdb-logs-compress.sh >/dev/null 2>&1
+  EOF
+  crontab crontab_YYYYMMDD
+  ```
 
 ## Prepare target database system
 
