@@ -64,13 +64,37 @@ DD=`date --date="today" '+%d'`; \
 tar -cvjf /tmp/gpdb-logs-${YYYY}${MM}${DD}.tbz2 $MASTER_DATA_DIRECTORY/pg_log/gpdb-${YYYY}-${MM}-${DD}*.csv &> /dev/null
 ```
 
-This script
+### Schedule log files compression
+TBD
 
-## 2 - Prepare target database system
+## Prepare target database system
 
-### 2.1 - Setup Query Replicate utility in the target system
+### Setup Query Replicate utility in the target system
 
-### 2.2 - Import Database DDL
+There are a couple of different options on how to setup the Query replicate utility into your target Greenplum cluster system:
+
+- Clone the utility code directly from its [Github repo](https://github.com/cantzakas/gpdb-queryrepl), if your target system has access to the internet and you already have (or the `gpadmin` user is allowed to install) the `git` utility on the host machine:
+
+  ```sh
+  $ pip install git --upgrade
+  $ git clone https://github.com/cantzakas/gpdb-queryrepl.git
+  $ cd gpdb-queryrepl
+  ```
+
+- Alternatively, you can download the [utility package](missing url for .tar file or similar) from the Github repo, transfer it over to the host machine and uncompress into a new folder.
+
+  ```sh
+  $ wget https://github.com/cantzakas/QueryReplicator_vx.y.tar
+  $ scp QueryReplicator_vx.y.tar user@host:directory/QueryReplicator_vx.y.tar
+  $ tar -xvf QueryReplicator_vx.y.tar
+  ```
+
+In both cases, the utility should be installed on the master of the cluster in which the target version of Greenplum is installed.
+
+### Import Database DDL
+
+Metadata files are created on the Greenplum Database master host in the `$MASTER_DATA_DIRECTORY/backups/YYYYMMDD/YYYYMMDDhhmmss/` directory. 
+
 
 ### 2.3 - Import source database log files into the target system
 
