@@ -24,7 +24,30 @@ tar -cvzf $MASTER_DATA_DIRECTORY/backups/YYYYMMDD/YYYYMMDDhhmmss/gpbackup_YYYYMM
 	$MASTER_DATA_DIRECTORY/backups/YYYYMMDD/YYYYMMDDhhmmss/gpbackup_YYYYMMDDhhmmss_*.*
 ```
 
-**Note:** the `gpbackup` and `gprestore` utilities are available for Greenplum Database clusters v. 4
+####Notes####
+1. `gpbackup` and `gprestore` utilities are available with Greenplum Database software v4.3.18 or later. If you are using Greenplum Database software release earlier than v4.3.18, then you can use the `pg_dump` utility to extract a database into a single script file or other archive file. To restore, you must use the corresponding `pg_restore` utility (if the dump file is in archive format), or you can use a client program such as `psql` (if the dump file is in plain text format). 
+
+  #### Examples ####
+  
+  - Dump the object definitions of a Greenplum Database in tar file format suitable for input into `pg_restore` utility, including distribution policy information:
+
+  ```sh
+  pg_dump -Ft --gp-syntax --schema-only mydb > mydb.tar
+  ```
+  
+  - Dump the object definitions of a Greenplum Database into a custom-format archive file suitable for input into `pg_restore` utility, including distribution policy information:
+  
+  ```sh
+  pg_dump -Fc --gp-syntax --schema-only mydb > mydb.dump
+  ```
+  
+  - Reload an archive file into a (freshly created) database named newdb:
+
+  ```sh
+  pg_restore -d newdb mydb.dump
+  ```
+  
+2. The dump file produced by `pg_dump` does not contain the statistics used by the optimizer to make query planning decisions. Therefore, it is wise to run `ANALYZE` after restoring from a dump file to ensure good performance.
 
 ### Update logging level in source database system
 
@@ -38,38 +61,12 @@ Use the `gpconfig` utility to check the active values set for the `log_min_messa
 gpconfig -c log_min_messages -v warning
 ```
 
+and, 
+
 ```sh
 #!/bin/bash
 
 gpconfig -c log_statement -v all
-```
-
-Alternatively, you can also use the `psql` utility to connect to the database cluster and check the active values, using the `SHOW name` command, i.e.
-
-```sql
-$ psql -d template1
-psql (8.3.23)
-Type "help" for help.
-
-template1=# SHOW log_min_messages;
-
-log_min_messages 
-------------------
-warning
-(1 row)
-```
-
-```sql
-$ psql -d template1
-psql (8.3.23)
-Type "help" for help.
-
-template1=# SHOW log_statement;
-
-log_statement 
----------------
-all
-(1 row)
 ```
 
 If the parameter values don't match the expected values, update them and then reload the new configuration settings to the database, as shown below: 
@@ -81,6 +78,35 @@ gpconfig -c log_min_messages -v warning
 gpconfig -c log_statement -v all
 gpstop -u
 ```
+
+####Notes####
+1. Alternatively, you can also use the `psql` utility to connect to the database cluster and check the active values, using the `SHOW <name>` command:
+
+  ```sql
+  $ psql -d template1
+  psql (8.3.23)
+  Type "help" for help.
+
+  template1=# SHOW log_min_messages;
+
+  log_min_messages 
+  ------------------
+  warning
+  (1 row)
+  ```
+
+  ```sql
+  $ psql -d template1
+  psql (8.3.23)
+  Type "help" for help.
+
+  template1=# SHOW log_statement;
+
+  log_statement 
+  ---------------
+  all
+  (1 row)
+  ```
 
 ### Compress source database daily log files
 Updating logging levels to '__all__' has the side-effect that database log file grows very large. This can be difficult to manage in clusters where there are limited disk resources or large/many transactions on the database (or both). In such clusters, it is highly recommended that database log files gets compressed, preferably on a daily basis. i.e.
@@ -99,6 +125,10 @@ EOF
 
 chmod +x /tmp/gpdb-logs-compress.sh
 ```
+
+####Notes####
+
+1. As previously mentioned, database log file can grow very large when logging level is set to '__all__'; before making and throughout such a change is in place, check regurarly for available free space in the host filesystem, i.e. in `$MASTER_DATA_DIRECTORY` (where log files are stored) or `/tmp` (where our script above, stores the compressed log files).
 
 ### Schedule log files compression
 The `cron` daemon can be used to run tasks in the background at specific times; there are a couple of ways we can update `cron` and schedule the execution of `gpdb-logs-compress.sh` utility which was defined in the previous step:
@@ -180,9 +210,9 @@ In both cases, the utility should be installed on the master of the cluster in w
   #!/bin/bash
   
   # Update directory value to match the location where you previously uncompressed the backup set package 
-  cd directory
-
-  # Update the `YYYYMMDDhhmmss` parameter value to match your backup set timestamp
+  cd directory. 
+  # Update the `YYYYMMDDhhmmss` parameter value to match your backup set timestamp.
+  # Uncompress the backup set file in place
   tar -xzvf gpbackup_YYYYMMDDhhmmss.tar.gz
   ```
 
