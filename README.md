@@ -60,9 +60,9 @@ tar -cvzf $MASTER_DATA_DIRECTORY/backups/YYYYMMDD/YYYYMMDDhhmmss/gpbackup_YYYYMM
 
 #### Notes
 
-1. `gpbackup` and `gprestore` utilities are available with Greenplum Database software v4.3.18 or later. If you are using Greenplum Database software release earlier than v4.3.18, then you can use the `pg_dump` utility to extract a database into a single script file or other archive file. To restore, you must use the corresponding `pg_restore` utility (if the dump file is in archive format), or you can use a client program such as `psql` (if the dump file is in plain text format). 
+`gpbackup` and `gprestore` utilities are available with Greenplum Database software v4.3.18 or later. If you are using Greenplum Database software release earlier than v4.3.18, then you can use the `pg_dump` utility to extract a database into a single script file or other archive file. To restore, you must use the corresponding `pg_restore` utility (if the dump file is in archive format), or you can use a client program such as `psql` (if the dump file is in plain text format). 
 
-  #### Examples ####
+#### Examples
   
   - Dump the object definitions of a Greenplum Database in tar file format suitable for input into `pg_restore` utility, including distribution policy information:
   
@@ -82,7 +82,7 @@ tar -cvzf $MASTER_DATA_DIRECTORY/backups/YYYYMMDD/YYYYMMDDhhmmss/gpbackup_YYYYMM
   pg_restore -d newdb mydb.dump
   ```
   
-2. The dump file produced by `pg_dump` does not contain the statistics used by the optimizer to make query planning decisions. Therefore, it is wise to run `ANALYZE` after restoring from a dump file to ensure good performance.
+The dump file produced by `pg_dump` does not contain the statistics used by the optimizer to make query planning decisions. Therefore, it is wise to run `ANALYZE` after restoring from a dump file to ensure good performance.
 
 ### Update logging level in source database system
 
@@ -150,14 +150,16 @@ Updating logging levels to '__all__' has the side-effect that database log file 
 
 ```sh
 tee -a /tmp/gpdb-logs-compress.sh <<- EOF
-
 #!/bin/bash
 
-YYYY=`date --date="yesterday" '+%Y'`; \
-MM=`date --date="yesteday" '+%m'`; \
-DD=`date --date="yesterday" '+%d'`; \
-tar -cvjf /tmp/gpdb-logs-${YYYY}${MM}${DD}.tbz2 \
-  $MASTER_DATA_DIRECTORY/pg_log/gpdb-${YYYY}-${MM}-${DD}*.csv &> /dev/null
+set -e
+
+YYYY=\$(date --date="yesterday" +%Y)
+MM=\$(date --date="yesterday" +%m)
+DD=\$(date --date="yesterday" +%d)
+
+tar -cvjf /tmp/gpdb-logs-\${YYYY}\${MM}\${DD}.tbz2\
+ $MASTER_DATA_DIRECTORY/pg_log/gpdb-\${YYYY}-\${MM}-\${DD}*.csv &> /dev/null
 EOF
 
 chmod +x /tmp/gpdb-logs-compress.sh
