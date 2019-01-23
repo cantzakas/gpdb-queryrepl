@@ -1,6 +1,7 @@
 # Greenplum Database Query Replay & Replicate utility
 
 ## Prepare source database system
+
 ### Export source Database DDL
 
 Backup all schemas and tables from the source database, including the global Greenplum Database system objects and query statistics, as shown [below](https://gist.github.com/cantzakas/bbdd6d30cec88bdcbf00850fc1a3a7a0). Backup set files are created on the Greenplum Database master host in the `$MASTER_DATA_DIRECTORY/backups/YYYYMMDD/YYYYMMDDhhmmss/` directory, which we will also package in a compressed file, in preparation for transfering to the target system:
@@ -24,7 +25,8 @@ tar -cvzf $MASTER_DATA_DIRECTORY/backups/YYYYMMDD/YYYYMMDDhhmmss/gpbackup_YYYYMM
 	$MASTER_DATA_DIRECTORY/backups/YYYYMMDD/YYYYMMDDhhmmss/gpbackup_YYYYMMDDhhmmss_*.*
 ```
 
-####Notes####
+#### Notes
+
 1. `gpbackup` and `gprestore` utilities are available with Greenplum Database software v4.3.18 or later. If you are using Greenplum Database software release earlier than v4.3.18, then you can use the `pg_dump` utility to extract a database into a single script file or other archive file. To restore, you must use the corresponding `pg_restore` utility (if the dump file is in archive format), or you can use a client program such as `psql` (if the dump file is in plain text format). 
 
   #### Examples ####
@@ -79,7 +81,8 @@ gpconfig -c log_statement -v all
 gpstop -u
 ```
 
-####Notes####
+#### Notes
+
 1. Alternatively, you can also use the `psql` utility to connect to the database cluster and check the active values, using the `SHOW <name>` command:
 
   ```sql
@@ -109,6 +112,7 @@ gpstop -u
   ```
 
 ### Compress source database daily log files
+
 Updating logging levels to '__all__' has the side-effect that database log file grows very large. This can be difficult to manage in clusters where there are limited disk resources or large/many transactions on the database (or both). In such clusters, it is highly recommended that database log files gets compressed, preferably on a daily basis. i.e.
 
 ```sh
@@ -126,11 +130,12 @@ EOF
 chmod +x /tmp/gpdb-logs-compress.sh
 ```
 
-#### Notes ####
+#### Notes
 
 1. As previously mentioned, database log file can grow very large when logging level is set to '__all__'; before making and throughout such a change is in place, check regurarly for available free space in the host filesystem, i.e. in `$MASTER_DATA_DIRECTORY` (where log files are stored) or `/tmp` (where our script above, stores the compressed log files).
 
 ### Schedule log files compression
+
 The `cron` daemon can be used to run tasks in the background at specific times; there are a couple of ways we can update `cron` and schedule the execution of `gpdb-logs-compress.sh` utility which was defined in the previous step:
 
 - Use the `crontab -e` command  to open your user account’s crontab file. Commands in this file run with your user account’s permissions. If you want a command to run with system permissions, use the `sudo crontab -e` command to open the root account’s crontab file or the `su -c “crontab -e”` command if user account is not in the `sudoers` group. At this point, you may be asked to select an editor; select any of the available by typing its number and press Enter. Add the following line into the editor and save:
@@ -238,6 +243,7 @@ In both cases, the utility should be installed on the master of the cluster in w
   # Update the `user`, `target-host` and `directory` values to match your cluster information
   scp -r /tmp/gpdb-logs-*.tbz2 user@target-host:directory
   ```
+
 - Login into the target host system and navigate into the directory where you previously moved the backupset files (no need to uncompress)
 
 ## Run Replay & Replicate Utility
@@ -303,6 +309,7 @@ python queryreplicator.py -f config.ini [-rLeca]
 ```
 
 #### Required parameters
+
 - The location of the [utility configuration file](https://github.com/cantzakas/gpdb-queryrepl#setup-the-utility-config-file) is specified with the `-f` parameter
 
 #### Optional parameters
