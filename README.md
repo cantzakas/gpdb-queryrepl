@@ -1,5 +1,36 @@
 # Greenplum Database Query Replay & Replicate utility
 
+## Pre-start checklist
+
+- Make sure Greenplum Database utilities are in the execution path:
+
+  ```sh
+  #!/bin/bash
+  
+  # Make sure gpbackup utility is in the execution path by sourcing greenplum_path.sh file
+  source /usr/local/greenplum-db/greenplum_path.sh
+  ```
+
+- Check the status of the source and target Greenplum Database systems:
+  
+  ```sh
+  #!/bin/bash
+  
+  # Display a brief summary of the state of the Greenplum Database system. Similar to -b (brief status) option
+  gpstate
+  ```
+  
+  or 
+  
+  ```sh
+  #!/bin/bash
+  
+  # Display a detailed status information for the Greenplum Database system
+  gpstate -s
+  ```
+  
+- Check the available free space in the host filesystem, i.e. in `$MASTER_DATA_DIRECTORY` (where database data and log files are stored) or `/tmp` (or similar), on both the source and the target Greenplum Database systems.
+
 ## Prepare source database system
 
 ### Export source Database DDL
@@ -32,7 +63,7 @@ tar -cvzf $MASTER_DATA_DIRECTORY/backups/YYYYMMDD/YYYYMMDDhhmmss/gpbackup_YYYYMM
   #### Examples ####
   
   - Dump the object definitions of a Greenplum Database in tar file format suitable for input into `pg_restore` utility, including distribution policy information:
-
+  
   ```sh
   pg_dump -Ft --gp-syntax --schema-only mydb > mydb.tar
   ```
