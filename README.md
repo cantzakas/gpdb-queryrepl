@@ -126,7 +126,7 @@ EOF
 chmod +x /tmp/gpdb-logs-compress.sh
 ```
 
-####Notes####
+#### Notes ####
 
 1. As previously mentioned, database log file can grow very large when logging level is set to '__all__'; before making and throughout such a change is in place, check regurarly for available free space in the host filesystem, i.e. in `$MASTER_DATA_DIRECTORY` (where log files are stored) or `/tmp` (where our script above, stores the compressed log files).
 
