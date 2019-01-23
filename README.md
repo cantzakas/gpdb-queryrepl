@@ -29,6 +29,8 @@
   gpstate -s
   ```
   
+  Start the Greenplum Database in both systems, if not started already, and/or fix any problems (i.e. segment down), if the `gpstate` utility reports any.
+  
 - Check the available free space in the host filesystem, i.e. in `$MASTER_DATA_DIRECTORY` (where database data and log files are stored) or `/tmp` (or similar), on both the source and the target Greenplum Database systems.
 
 ## Prepare source database system
