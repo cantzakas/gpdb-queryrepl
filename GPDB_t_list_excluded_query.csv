@@ -1,0 +1,75 @@
+"SELECT dbid, content, hostname, port FROM  gp_segment_configuration WHERE role='(\w)' ORDER BY content DESC"
+"SELECT c.oid, a.attnum, a.attname, c.relname, n.nspname, a.attnotnull OR \(t.typtype = 'd' AND t.typnotnull\), pg_catalog.pg_get_expr\(d.adbin, d.adrelid\) LIKE '\%nextval\(\%' FROM pg_catalog.pg_class c JOIN pg_catalog.pg_namespace n ON \(c.relnamespace = n.oid\) JOIN pg_catalog.pg_attribute a ON \(c.oid = a.attrelid\) JOIN pg_catalog.pg_type t ON \(a.atttypid = t.oid\) LEFT JOIN pg_catalog.pg_attrdef d ON \(d.adrelid = a.attrelid AND d.adnum = a.attnum\) JOIN \((\w)*\) vals ON \(c.oid = vals.oid AND a.attnum = vals.attnum\) "
+LOCK TABLE % IN ACCESS SHARE MODE
+"SELECT \(SELECT rolname FROM pg_catalog.pg_roles WHERE oid = datdba\) as dba, pg_encoding_to_char\(encoding\) as encoding, \(SELECT spcname FROM pg_tablespace t WHERE t.oid = dattablespace\) as tablespace FROM pg_database WHERE datname = '%'"
+"SELECT tableoid, oid, proname as aggname, pronamespace as aggnamespace, pronargs, proargtypes, \(SELECT rolname FROM pg_catalog.pg_roles WHERE oid = proowner\) as rolname, proacl as aggacl FROM pg_proc WHERE proisagg AND pronamespace != \(select oid from pg_namespace where nspname = '(\w)*'\)"
+"select nt.nspname as table_schema,
+         c.relname as table_name,
+         a.attname as column_name,
+         a.attnum as ordinal_position, 
+         format_type\(a.atttypid, a.atttypmod\) as data_type,
+         c.relkind = 'r' AS is_updatable,
+         a.atttypid in \(23, 20\) and a.atthasdef and 
+             \(select position \( 'nextval\(' in pg_catalog.pg_get_expr\(adbin,adrelid\) \) > 0 and 
+                          position \( '::regclass\)' in pg_catalog.pg_get_expr\(adbin,adrelid\) \) > 0  
+              FROM pg_catalog.pg_attrdef d
+              WHERE d.adrelid = a.attrelid AND d.adnum = a.attnum AND a.atthasdef\) as has_sequence 
+          from pg_catalog.pg_class c join pg_catalog.pg_namespace nt on \(c.relnamespace = nt.oid\) 
+             join pg_attribute a on \(a.attrelid = c.oid\) 
+         where c.relname = '(\w)*' and nt.nspname = '(\w)*'
+         and a.attnum > 0 and a.attisdropped = 'f'
+         order by a.attnum "
+ALTER TABLE %
+"SELECT c.tableoid, c.oid, relname, relacl, relkind, relstorage, relnamespace, \(SELECT rolname FROM pg_catalog.pg_roles WHERE oid = relowner\) as rolname, relchecks, reltriggers, relhasindex, relhasrules, relhasoids, d.refobjid as owning_tab, d.refobjsubid as owning_col, \(SELECT spcname FROM pg_tablespace t WHERE t.oid = c.reltablespace\) AS reltablespace, array_to_string\(c.reloptions, ', '\) as reloptions, p.parrelid as parrelid from pg_class c left join pg_depend d on \(c.relkind = 'S' and d.classid = c.tableoid and d.objid = c.oid and d.objsubid = 0 and d.refclassid = c.tableoid and d.deptype = 'a'\) left join pg_partition_rule pr on c.oid = pr.parchildrelid left join pg_partition p on pr.paroid = p.oid where relkind in \('r', 'S', 'v', 'c'\) AND c.oid NOT IN \(select p.parchildrelid from pg_partition_rule p left join pg_exttable e on p.parchildrelid=e.reloid where e.reloid is null\) order by c.oid"
+"SELECT description, classoid, objoid, objsubid FROM pg_catalog.pg_description ORDER BY classoid, objoid, objsubid"
+"SELECT tableoid, oid, typname, typnamespace, \(SELECT rolname FROM pg_catalog.pg_roles WHERE oid = typowner\) as rolname, typinput::oid as typinput, typoutput::oid as typoutput, typelem, typrelid, CASE WHEN typrelid = 0 THEN ' '::""char"" ELSE \(SELECT relkind FROM pg_class WHERE oid = typrelid\) END as typrelkind, typtype, typisdefined FROM pg_type"
+SELECT loid FROM pg_largeobject LIMIT 1
+"SELECT tableoid, oid, adnum, pg_catalog.pg_get_expr\(adbin, adrelid\) AS adsrc FROM pg_catalog.pg_attrdef WHERE adrelid = '%'::pg_catalog.oid"
+"SELECT pg_get_partition_template_def\('(\d)*'::pg_catalog.oid, true, true\) "
+DEALLOCATE%
+"SELECT sequence_name, last_value, increment_by, CASE WHEN increment_by > 0 AND max_value = 9223372036854775807 THEN NULL      WHEN increment_by < 0 AND max_value = -1 THEN NULL      ELSE max_value END AS max_value, CASE WHEN increment_by > 0 AND min_value = 1 THEN NULL      WHEN increment_by < 0 AND min_value = -9223372036854775807 THEN NULL      ELSE min_value END AS min_value, cache_value, is_cycled, is_called from %"
+"SELECT proretset, prosrc, probin, proallargtypes, proargmodes, proargnames, provolatile, proisstrict, prosecdef, prodataaccess, \(SELECT lanname FROM pg_catalog.pg_language WHERE oid = prolang\) as lanname FROM pg_catalog.pg_proc WHERE oid = '(\d)*'::pg_catalog.oid"
+"SELECT tableoid, oid, \*, \(SELECT rolname FROM pg_catalog.pg_roles WHERE oid = '(\d)*'\) as lanowner FROM pg_language WHERE lanispl ORDER BY oid"
+"SELECT tableoid, oid, nspname, \(SELECT rolname FROM pg_catalog.pg_roles WHERE oid = nspowner\) as rolname, nspacl FROM pg_namespace"
+"SELECT partitionschemaname, partitiontablename FROM pg_catalog.pg_partitions  WHERE partitionschemaname != schemaname AND schemaname = '(\w)*' AND tablename = '(\w)*'"
+"SELECT t.tableoid, t.oid, t.relname as indexname, pg_catalog.pg_get_indexdef\(i.indexrelid\) as indexdef, t.relnatts as indnkeys, i.indkey, i.indisclustered, c.contype, c.conname, c.tableoid as contableoid, c.oid as conoid, \(SELECT spcname FROM pg_catalog.pg_tablespace s WHERE s.oid = t.reltablespace\) as tablespace, array_to_string\(t.reloptions, ', '\) as options FROM pg_catalog.pg_index i JOIN pg_catalog.pg_class t ON \(t.oid = i.indexrelid\) LEFT JOIN pg_catalog.pg_depend d ON \(d.classid = t.tableoid AND d.objid = t.oid AND d.deptype = 'i'\) LEFT JOIN pg_catalog.pg_constraint c ON \(d.refclassid = c.tableoid AND d.refobjid = c.oid\) WHERE i.indrelid = '%'::pg_catalog.oid ORDER BY indexname"
+GRANT % ON %
+"SELECT pg_get_partition_def\('(\d)*'::pg_catalog.oid, true, true\) "
+truncate %
+"SELECT tableoid, oid, proname, prolang, pronargs, proargtypes, prorettype, proacl, pronamespace, \(SELECT rolname FROM pg_catalog.pg_roles WHERE oid = proowner\) as rolname FROM pg_proc WHERE NOT proisagg AND pronamespace != \(select oid from pg_namespace where nspname = '(\w)*'\)"
+"SELECT pg_catalog.format_type\('(\d)*'::pg_catalog.oid, NULL\)"
+SELECT pg_catalog.pg_get_viewdef\('(\d)*'::pg_catalog.oid\) as viewdef
+SELECT count\(\*\) FROM pg_class
+"SELECT  CASE WHEN t.oid > 10000 OR substring\(t.typname from 1 for 1\) = '_'  THEN  quote_ident\(t.typname\)  ELSE  pg_catalog.format_type\(t.oid, NULL\)  END   as typname , t.oid AS oid, t.typnamespace AS typnamespace, \(SELECT rolname FROM pg_catalog.pg_roles WHERE oid = typowner\) as rolname, array_to_string\(a.typoptions, ', '\) AS typoptions  FROM pg_type AS t  INNER JOIN pg_catalog.pg_type_encoding a ON a.typid = t.oid WHERE t.typisdefined = 't'"
+"select distinct\(oid\), typstorage from pg_type where oid in \(select distinct atttypid from pg_attribute\)"
+"SELECT classid, objid, refclassid, refobjid, deptype FROM pg_depend WHERE deptype != 'p' ORDER BY 1,2"
+SELECT * FROM gp_backup_launch\(%\)
+"SELECT p.oid::pg_catalog.regprocedure AS signature, \( SELECT rolname FROM pg_catalog.pg_roles WHERE oid = proowner \) AS owner FROM pg_pltemplate t, pg_proc p WHERE p.oid = % AND proname = tmplhandler AND pronamespace = \( SELECT oid FROM pg_namespace WHERE nspname = 'pg_catalog'\)"
+"SELECT ptc.tableoid as tableoid,        ptc.oid as oid,        ptc.ptcname as ptcname,        ptcreadfn as ptcreadoid,        ptcwritefn as ptcwriteoid, 		 ptcvalidatorfn as ptcvaloid,        \(SELECT rolname FROM pg_catalog.pg_roles WHERE oid = ptc.ptcowner\) as rolname,        ptc.ptctrusted as ptctrusted,        ptc.ptcacl as ptcacl FROM   pg_extprotocol ptc"
+"SELECT a.attname, pg_catalog.format_type\(a.atttypid, a.atttypmod\) as atttypdefn FROM pg_catalog.pg_type t, pg_catalog.pg_attribute a WHERE t.oid = '%'::pg_catalog.oid AND a.attrelid = t.typrelid AND NOT a.attisdropped ORDER BY a.attnum"
+"SELECT typname, typlen FROM pg_type WHERE oid=(\d)*"
+"select to_char\(coalesce\(sum\(modcount::bigint\), 0\), '999999999999999999999'\) from pg_aoseg.pg_aoseg_(\d)*"
+"select oid, typbasetype from pg_type where typname = '%'"
+"SELECT a.attnum, a.atttypid, a.attname, a.atttypmod, a.attstattarget, a.attstorage, a.attnotnull, a.atthasdef, a.attisdropped, a.attislocal, pg_catalog.format_type\(a.atttypid,a.atttypmod\) as atttypname , pg_catalog.array_to_string\(e.attoptions, ','\) as attencoding from pg_catalog.pg_attribute a % LEFT OUTER JOIN pg_catalog.pg_attribute_encoding e ON e.attrelid = a.attrelid AND e.attnum = a.attnum where a.attrelid = '(\d)*'::pg_catalog.oid and a.attnum > 0::pg_catalog.int2 order by a.attrelid, a.attnum"
+COPY (\w)% \((\w)%\) TO stdout IGNORE EXTERNAL PARTITIONS;
+"select n.nspname, c.relname, a.attname, a.atttypid, t.typname, a.attnum, a.attlen, a.atttypmod, a.attnotnull, c.relhasrules, c.relkind, c.oid, pg_get_expr(d.adbin, d.adrelid), case t.typtype when 'd' then t.typbasetype else 0 end, t.typtypmod, c.relhasoids from \(\(\(pg_catalog.pg_class c inner join pg_catalog.pg_namespace n on n.oid = c.relnamespace and c.oid = %\) inner join pg_catalog.pg_attribute a on \(not a.attisdropped\) and a.attnum > 0 and a.attrelid = c.oid\) inner join pg_catalog.pg_type t on t.oid = a.atttypid\) left outer join pg_attrdef d on a.atthasdef and d.adrelid = a.attrelid and d.adnum = a.attnum order by n.nspname, c.relname, attnum"
+"SELECT inhrelid, inhparent from pg_inherits"
+SELECT 1 from pg_catalog.pg_class where relnamespace = % and relname  = '%';
+SELECT * FROM gp_read_backup_file\(%\)
+"SELECT tableoid, oid, conname, connamespace, \(SELECT rolname FROM pg_catalog.pg_roles WHERE oid = conowner\) as rolname FROM pg_conversion"
+"SELECT tableoid, oid, rulename, ev_class as ruletable, ev_type, is_instead FROM pg_rewrite ORDER BY oid"
+"SELECT tableoid, oid, castsource, casttarget, castfunc, castcontext FROM pg_cast ORDER BY 3,4"
+"select to_char\(coalesce\(sum\(modcount::bigint\), 0\), '999999999999999999999'\) from pg_aoseg.pg_aocsseg_(\d)*"
+SELECT 1 FROM pg_class WHERE relname = '%' and relnamespace = %;
+"select attname from pg_attribute a, gp_distribution_policy p , pg_class c, pg_namespace n where a.attrelid = c.oid and a.attrelid = p.localoid and a.attnum = any \(p.attrnums\) and c.relnamespace = n.oid and n.nspname = '(\w)*' and c.relname = 'segurnet_fnm'; "
+Select version\(\)
+VACUUM %
+"SELECT p.oid::pg_catalog.regprocedure AS signature, \( SELECT rolname FROM pg_catalog.pg_roles WHERE oid = proowner \) AS owner FROM pg_pltemplate t, pg_proc p WHERE p.oid = % AND proname = tmplvalidator AND pronamespace = \( SELECT oid FROM pg_namespace WHERE nspname = 'pg_catalog' \)"
+"SELECT tableoid, oid, \(SELECT rolname FROM pg_catalog.pg_roles WHERE oid = datdba\) as dba, pg_encoding_to_char\(encoding\) as encoding, \(SELECT spcname FROM pg_tablespace t WHERE t.oid = dattablespace\) as tablespace, shobj_description\(oid, 'pg_database'\) as description FROM pg_database WHERE datname = '(\w)*'"
+select attnum from pg_catalog.pg_attribute where attrelid = '%'::regclass and attname = '%'
+"SELECT tableoid, oid, oprname, oprnamespace, \(SELECT rolname FROM pg_catalog.pg_roles WHERE oid = oprowner\) as rolname, oprcode::oid as oprcode FROM pg_operator"
+"select attname from pg_attribute a, gp_distribution_policy p , pg_class c, pg_namespace n where a.attrelid = c.oid and a.attrelid = p.localoid and a.attnum = any \(p.attrnums\) and c.relnamespace = n.oid and n.nspname = '%' and c.relname = '%';"
+"SELECT x.location, x.fmttype, x.fmtopts, x.command, x.rejectlimit, x.rejectlimittype, n.nspname AS errnspname, d.relname AS errtblname, pg_catalog.pg_encoding_to_char\(x.encoding\), x.writable FROM pg_catalog.pg_class c JOIN pg_catalog.pg_exttable x ON \( c.oid = x.reloid \) LEFT JOIN pg_catalog.pg_class d ON \( d.oid = x.fmterrtbl \) LEFT JOIN pg_catalog.pg_namespace n ON \( n.oid = d.relnamespace \) WHERE c.oid = '%'::oid"
+"SELECT attrnums from pg_namespace as n, pg_class as c, gp_distribution_policy as p WHERE c.relname = '(\w)*'AND c.relnamespace=n.oid AND c.oid = p.localoid AND n.nspname= '(\w)*'"
+"SELECT c.relname, pr.parname FROM pg_partition_rule pr join pg_class c ON pr.parchildrelid = c.oid join pg_partition p ON p.oid = pr.paroid WHERE p.parrelid = (\d)* AND c.relstorage = 'x';"
+SELECT \* FROM pg_class WHERE relname LIKE '%';
